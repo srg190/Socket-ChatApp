@@ -1,0 +1,47 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  email          String    @unique
+  userName       String    @unique
+  password       String
+  groups         Group[]   @relation("involvedGroup", fields: [groupIds], references: [id])
+  groupIds       String[]  @db.ObjectId
+  groupAdmin     Group[]   @relation("groupAdmin")
+  sentToMessages Message[] @relation("sendTo")
+  sentByMessages Message[] @relation("sendBy")
+  isOnline       Boolean   @default(true)
+  lastSeen       DateTime?
+  createAt       DateTime  @default(now())
+}
+
+model Group {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  users    User[]    @relation("involvedGroup", fields: [userIds], references: [id])
+  userIds  String[]  @db.ObjectId
+  admin    User      @relation("groupAdmin", fields: [adminId], references: [id], onDelete: Cascade)
+  adminId  String    @db.ObjectId
+  messages Message[]
+  createAt DateTime  @default(now())
+}
+
+model Message {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  text          String
+  sendTo        User?    @relation("sendTo", fields: [sendToId], references: [id], onDelete: Cascade)
+  sendToId      String?  @db.ObjectId
+  sendBy        User     @relation("sendBy", fields: [sendById], references: [id], onDelete: Cascade)
+  sendById      String   @db.ObjectId
+  sendToGroup   Group?   @relation(fields: [sendToGroupId], references: [id], onDelete: Cascade)
+  sendToGroupId String?  @db.ObjectId
+  createAt      DateTime @default(now())
+}

@@ -1,0 +1,27 @@
+version: "3.1"
+services:
+  mongo:
+    build: ./database
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: mongo
+      MONGO_REPLICA_HOST: localhost
+      MONGO_REPLICA_PORT: 27017
+    ports:
+      - "27017:27017"
+  # backend:
+  #   build: ./server
+  #   restart: always
+  #   environment:
+  #     DATABASE_URL: mongodb://root:root@localhost:27017/chatApp?authSource=admin
+  #     JWT_SECRET: sdkjkug979g439g479^#
+  #     COOKIE_EXPIRE: 15
+  #   depends_on:
+  #     - mongo
+  #   ports:
+  #     - "4000:4000"
+  #   volumes:
+  #     - ./server:/app
+  #   container_name: backend

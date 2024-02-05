@@ -10,11 +10,10 @@ const initialState: UserAuth = {
     id: "",
     email: "",
     userName: "",
-    groupIds: [],
+    groups: [],
     isOnline: false,
     lastSeen: null,
     createAt: null,
-    groupAdmin: [],
   },
   token: "",
   message: "",
@@ -96,6 +95,52 @@ export const userLogout = createAsyncThunk(
   }
 );
 
+export const createGroup = createAsyncThunk(
+  "user/creatGroup",
+  async (data: { name: string }, thunkAPI) => {
+    try {
+      const res = await axios.post(Api.CreateGroup, data, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      });
+      return res.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return thunkAPI.rejectWithValue({
+          error: error.response?.data,
+        });
+      } else {
+        return "An error occurred";
+      }
+    }
+  }
+);
+
+export const addInGroup = createAsyncThunk(
+  "user/addInGroup",
+  async (data: { groupId: string; recipitantId: string }, thunkAPI) => {
+    try {
+      const res = await axios.post(Api.AddInGroup, data, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      });
+      return res.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return thunkAPI.rejectWithValue({
+          error: error.response?.data,
+        });
+      } else {
+        return "An error occurred";
+      }
+    }
+  }
+);
+
 const userSlice = createSlice({
   name: "user",
   initialState,
@@ -140,7 +185,6 @@ const userSlice = createSlice({
       state.token = action.payload.token;
       state.success = action.payload.success;
       state.loading = false;
-      console.log("state..... redux, ", state);
     });
     builder.addCase(userLogin.rejected, (state, action) => {
       const payloadError = (
@@ -169,6 +213,32 @@ const userSlice = createSlice({
       console.log("state..... redux, ", state);
     });
     builder.addCase(userLogout.rejected, (state, action) => {
+      const payloadError = (
+        action.payload as {
+          error: {
+            message: string;
+            success: boolean;
+          };
+        }
+      )?.error;
+      state.loading = false;
+      state.success = payloadError.success;
+      state.error = payloadError.message;
+      state.message = "";
+    });
+
+    builder.addCase(createGroup.pending, (state) => {
+      state.loading = true;
+      state.message = "";
+      state.error = "";
+    });
+    builder.addCase(createGroup.fulfilled, (state, action) => {
+      state.user.groups = action.payload.data.groups;
+      state.message = action.payload.message;
+      state.success = action.payload.success;
+      state.loading = false;
+    });
+    builder.addCase(createGroup.rejected, (state, action) => {
       const payloadError = (
         action.payload as {
           error: {

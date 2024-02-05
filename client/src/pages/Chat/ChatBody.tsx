@@ -1,32 +1,37 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, message } from "../../interface";
+import { Group, Message, User, message } from "../../interface";
 import Emitter from "../../event";
-import { setCookie } from "../../utilities";
+import { setCookie, timeOptions } from "../../utilities";
 import { useAppDispatch, useAppSelector } from "../../redux/store";
 import { userLogout } from "../../redux/slices/userSlice";
+import {
+  getGroupConversation,
+  getUserConversation,
+} from "../../redux/slices/messageSlice";
+import { Socket } from "socket.io-client";
 
 const ChatBody = ({
-  messages,
+  // messages,
+  socket,
   lastMessageRef,
   typingStatus,
 }: {
-  messages: message[];
+  // messages?: message[];
+  socket: Socket;
   lastMessageRef: any;
   typingStatus: string;
 }) => {
   const navigate = useNavigate();
-  const [chatWith, setChatWith] = useState(
-    localStorage.getItem("recieverName") || "Broadcast"
-  );
+  const [chatWith, setChatWith] = useState("");
   const dispatch = useAppDispatch();
-  const { loading, error, success } = useAppSelector((state) => state.User);
-
+  const { loading, error, success, user } = useAppSelector(
+    (state) => state.User
+  );
+  const { messages } = useAppSelector((state) => state.Message);
+  // const { data, setData } = useState<Message[]>([]);
   const handleLeaveChat = () => {
     localStorage.removeItem("userName");
-    // localStorage.removeItem("recieverName");
-    // localStorage.removeItem("recieverId");
-    // localStorage.removeItem("sender");
     dispatch(userLogout());
     if (!loading && success && !error) {
       navigate("/");
@@ -35,10 +40,34 @@ const ChatBody = ({
   };
 
   useEffect(() => {
-    Emitter.on("chatWith", (data: User) => {
-      setChatWith(data.userName);
+    Emitter.on("chatWith", (data: User | Group) => {
+      if ("userName" in data) {
+        dispatch(
+          getUserConversation({
+            recipientId: data.id,
+          })
+        );
+        setChatWith(data.userName);
+      } else {
+        // 'data' is a Group
+        dispatch(
+          getGroupConversation({
+            groupId: data.id,
+          })
+        );
+        setChatWith(data.name);
+      }
     });
-  }, [chatWith, loading, error, success]);
+    return () => {
+      Emitter.off("chatWith");
+    };
+  }, []);
+
+  useEffect(() => {
+    socket.on("private-message", (data) =>
+      console.log(data, " data from chat")
+    );
+  }, [socket]);
 
   if (loading) {
     return <h1>Loading...</h1>;
@@ -47,30 +76,45 @@ const ChatBody = ({
   return (
     <>
       <header className="chat__mainHeader">
-        <p>Hangout with {chatWith}</p>
+        <p>Chatting with {chatWith}</p>
         <button className="leaveChat__btn" onClick={handleLeaveChat}>
           LEAVE CHAT
         </button>
       </header>
 
       <div className="message__container">
-        {messages.map((message) =>
-          message.name === localStorage.getItem("userName") ? (
-            <div className="message__chats" key={message.id}>
-              <p className="sender__name">You</p>
-              <div className="message__sender">
-                <p>{message.text}</p>
+        {messages
+          .slice()
+          .reverse()
+          .map((message) =>
+            message.sendBy.id === user.id ? (
+              <div className="message__chats" key={message.id}>
+                <p className="sender__name">You</p>
+                <div className="message__sender">
+                  <p>{message.text}</p>
+                  <h6>
+                    {new Date(message.createAt.toLocaleString()).toLocaleString(
+                      "en-IN",
+                      timeOptions
+                    )}
+                  </h6>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="message__chats" key={message.id}>
-              <p>{message.name}</p>
-              <div className="message__recipient">
-                <p>{message.text}</p>
+            ) : (
+              <div className="message__chats" key={message.id}>
+                <p>{message.sendBy.userName}</p>
+                <div className="message__recipient">
+                  <p>{message.text}</p>
+                  <h6>
+                    {new Date(message.createAt.toLocaleString()).toLocaleString(
+                      "en-IN",
+                      timeOptions
+                    )}
+                  </h6>
+                </div>
               </div>
-            </div>
-          )
-        )}
+            )
+          )}
 
         <div className="message__status">
           <p>{typingStatus}</p>

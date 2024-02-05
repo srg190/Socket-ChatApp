@@ -140,7 +140,8 @@ export const loginUser = async (
         isOnline: true,
       },
       include: {
-        groupAdmin: true,
+        // groupAdmin: true,
+        groups: true,
       },
     });
 

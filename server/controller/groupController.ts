@@ -87,6 +87,31 @@ export const addInGroup = async (
       },
     });
 
+    const group = await prisma.group.findUnique({
+      where: {
+        id: groupId,
+      },
+    });
+
+    const isAlreadyInGroup = group?.userIds.some((v) => v == recipitantId);
+    if (isAlreadyInGroup){
+      return next(
+        new ErrorHandler(
+          "User already exist in this group",
+          StatusCodes.METHOD_NOT_ALLOWED
+        )
+      );
+    }
+
+    if (req.user && group?.adminId !== req.user.id) {
+      return next(
+        new ErrorHandler(
+          "You do not have permission to add in this group",
+          StatusCodes.UNAUTHORIZED
+        )
+      );
+    }
+
     if (!recipitant) {
       return next(
         new ErrorHandler("Provided recipitant not found", StatusCodes.NOT_FOUND)
@@ -249,6 +274,126 @@ export const leaveGroup = async (
     res.status(StatusCodes.ACCEPTED).json({
       message: "Group deleted successfully",
       success: true,
+    });
+  } catch (error) {
+    return next(
+      new ErrorHandler(
+        "Internal server error",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
+  }
+};
+
+export const getGroupDetails = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { groupId, page = 1, pageSize = 30 } = req.body;
+
+    if (!groupId) {
+      return next(
+        new ErrorHandler("Please provide groupId", StatusCodes.BAD_REQUEST)
+      );
+    }
+
+    const group = await prisma.group.findUnique({
+      where: {
+        id: groupId,
+      },
+      include: {
+        users: {
+          select: {
+            id: true,
+            email: true,
+            userName: true,
+          },
+        },
+        messages: {
+          take: pageSize,
+          skip: (page - 1) * pageSize,
+          orderBy: {
+            createAt: "desc",
+          },
+          include: {
+            sendBy: {
+              select: {
+                id: true,
+                userName: true,
+                email: true,
+              },
+            },
+            sendTo: {
+              select: {
+                id: true,
+                userName: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!group) {
+      return next(new ErrorHandler("Group not found", StatusCodes.NOT_FOUND));
+    }
+    res.status(StatusCodes.OK).json({
+      message: "Fetch successfully",
+      success: true,
+      data: group,
+      page: page || 1,
+      pageSize: pageSize || 30,
+    });
+  } catch (error) {
+    return next(
+      new ErrorHandler(
+        "Internal server error",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
+  }
+};
+
+export const getGroupUsersList = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { groupId }: { groupId: string } = req.body;
+
+    if (!groupId) {
+      return next(
+        new ErrorHandler("Please provide groupId", StatusCodes.BAD_REQUEST)
+      );
+    }
+
+    const group = await prisma.group.findUnique({
+      where: {
+        id: groupId,
+      },
+      include: {
+        users: {
+          select: {
+            id: true,
+            userName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!group) {
+      return next(new ErrorHandler("Group not found", StatusCodes.NOT_FOUND));
+    }
+
+    res.status(StatusCodes.OK).json({
+      message: "Fetch successfully",
+      success: true,
+      data: group,
     });
   } catch (error) {
     return next(

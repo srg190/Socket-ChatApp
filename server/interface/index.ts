@@ -1,8 +1,4 @@
 import { Request } from "express";
-export interface User {
-  socketID?: string;
-  userName: string;
-}
 
 export interface User {
   id: string;
@@ -12,6 +8,10 @@ export interface User {
   lastSeen: Date | null;
   isOnline: boolean;
   createAt: Date;
+}
+
+export interface SocketUser extends User {
+  socketID?: string;
 }
 
 export interface Token {

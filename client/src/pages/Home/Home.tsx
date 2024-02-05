@@ -2,11 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 import { useAppDispatch, useAppSelector } from "../../redux/store";
-import {
-  userRegistration,
-  userActions,
-  userLogin,
-} from "../../redux/slices/userSlice";
+import { userRegistration, userLogin } from "../../redux/slices/userSlice";
 
 const Home = ({ socket }: { socket: Socket }) => {
   const navigate = useNavigate();
@@ -26,11 +22,10 @@ const Home = ({ socket }: { socket: Socket }) => {
     } else {
       dispatch(userLogin({ email, userName, password }));
     }
-    socket.emit("newUser", { userName, socketID: socket.id });
+    
   };
 
   useEffect(() => {
-    console.log(error, "fire hua bro ?");
     if (!loading && success) {
       navigate("/chat");
     }
@@ -39,6 +34,7 @@ const Home = ({ socket }: { socket: Socket }) => {
   if (loading) {
     return <h1>Loading...</h1>;
   }
+  
   return (
     <>
       <div>

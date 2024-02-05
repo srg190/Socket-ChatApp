@@ -9,3 +9,13 @@ export function setCookie(name: string, value: string, days: number) {
 
   document.cookie = name + "=" + value + expires + "; path=/";
 }
+
+export const timeOptions: Intl.DateTimeFormatOptions = {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  second: "numeric",
+  timeZone: "Asia/Kolkata", // Set the time zone to India
+};

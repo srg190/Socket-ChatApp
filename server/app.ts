@@ -7,7 +7,7 @@ import express, {
 import { Socket, Server } from "socket.io";
 import cors from "cors";
 import http from "http";
-import { User } from "./interface";
+import { SocketUser } from "./interface";
 import userRoutes from "./routes/userRoutes";
 import groupRoutes from "./routes/groupRoutes";
 import messageRoutes from "./routes/messageRoutes";
@@ -48,9 +48,34 @@ const io = new Server(server, {
 });
 
 ////////////////////////////////////////////////////////////////
-
-let users: User[] = [];
 // users.push({ userName: "Broadcast" });
+
+interface Message {
+  id: string;
+  text: string;
+  createAt: Date;
+  sendToId?: string | null;
+  sendById: string;
+  sendToGroupId?: string;
+  sendBy: {
+    id: string;
+    email: string;
+    userName: string;
+  };
+  sendTo?: {
+    id: string;
+    email: string;
+    userName: string;
+  };
+}
+
+interface User {
+  [key: string]: string;
+}
+
+const messages: Message[] = [];
+
+let userToSocketMap: User = {};
 
 io.on("connection", (socket: Socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
@@ -60,31 +85,60 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("newUser", (data) => {
-    users.push(data);
-    io.emit("newUserResponse", users);
-  });
-
-  socket.on("typing", (data) => socket.broadcast.emit("typingResponse", data));
-
-  socket.on("disconnect", () => {
-    console.log("🔥: A user disconnected");
-    users = users.filter((user) => user.socketID !== socket.id);
-    io.emit("newUserResponse", users);
-    socket.disconnect();
+    userToSocketMap[data.user.id] = data.socketID;
+    io.emit("newUserResponse", userToSocketMap);
+    console.log(" here the users", userToSocketMap);
   });
 
   socket.on(
-    "private_message",
-    ({ content, to }: { content: string; to: string }) => {
-      const message = {
-        content,
-        from: socket.id,
-        to,
-      };
-      socket.to(to).to(socket.id).emit("private_message", message);
-      // messageStore.saveMessage(message);
+    "private-message",
+    ({
+      recipitantId,
+      text,
+      message,
+    }: {
+      recipitantId: string;
+      text: string;
+      message: Message;
+    }) => {
+      const recipitantSocket = userToSocketMap[recipitantId];
+      messages.push(message);
+      if (recipitantSocket) {
+        io.to(recipitantSocket).emit("private-message", {
+          sender: socket.id,
+          text,
+          messages,
+        });
+      } else {
+        io.emit("error", "recipient not found");
+        console.log(`Recipient ${recipitantId} is not connected.`);
+      }
     }
   );
+
+  // socket.emit('private-message-limit', )
+
+  socket.on("typing", (data) => socket.broadcast.emit("typingResponse", data));
+
+  // socket.on("disconnect", () => {
+  //   console.log("🔥: A user disconnected");
+  //   users = users.filter((user) => user.socketID !== socket.id);
+  //   io.emit("newUserResponse", users);
+  //   socket.disconnect();
+  // });
+
+  // socket.on(
+  //   "private_message",
+  //   ({ content, to }: { content: string; to: string }) => {
+  //     const message = {
+  //       content,
+  //       from: socket.id,
+  //       to,
+  //     };
+  //     socket.to(to).to(socket.id).emit("private_message", message);
+  //     // messageStore.saveMessage(message);
+  //   }
+  // );
 });
 
 app.get("/", (req: Request, res: Response) => {

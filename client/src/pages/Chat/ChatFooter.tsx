@@ -1,9 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 import Emitter from "../../event";
+import { Friend, Group } from "../../interface";
+import { userSendMessage } from "../../redux/slices/messageSlice";
+import { useAppDispatch } from "../../redux/store";
 
 const ChatFooter = ({ socket }: { socket: Socket }) => {
   const [message, setMessage] = useState("");
+  const [componentReady, setComponentReady] = useState(false);
+  // const [currChatWith, setCurrChatWith] = useState<"friend" | "group">(
+  //   "friend"
+  // );
+  const [data, setData] = useState<Friend | Group | null>(null);
+  const dispatch = useAppDispatch();
 
   const handleTyping = () =>
     socket.emit("typing", `${localStorage.getItem("userName")} is typing`);
@@ -17,17 +26,44 @@ const ChatFooter = ({ socket }: { socket: Socket }) => {
     }, 1000);
   };
 
+  Emitter.on("chatWith", (data: Friend | Group) => {
+    // console.log("Hello World chatwith ---> ", data);
+    setData(data);
+    setComponentReady(true);
+  });
+
+  const sendMessage = () => {
+    if (componentReady && data) {
+      if ((data as Friend).email) {
+        // setCurrChatWith("friend");
+        dispatch(
+          userSendMessage({
+            recipitantId: data && data.id,
+            text: message,
+          })
+        );
+        socket.emit("private-message", {
+          text: message,
+          recipitantId: data && data.id,
+        });
+      } else {
+        // setCurrChatWith("group");
+        dispatch(
+          userSendMessage({
+            groupId: data && data.id,
+            text: message,
+          })
+        );
+      }
+    }
+  };
+
   const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (message.trim() && localStorage.getItem("userName")) {
-      socket.emit("message", {
-        text: message,
-        name: localStorage.getItem("userName"),
-        id: `${socket.id}${Math.random()}`,
-        socketID: socket.id,
-      });
-    }
+    sendMessage();
     setMessage("");
+    // if (message.trim() && localStorage.getItem("userName")) {
+    // }
   };
 
   return (

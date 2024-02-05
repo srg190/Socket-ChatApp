@@ -7,14 +7,17 @@ import { message } from "../../interface";
 import { useAppSelector } from "../../redux/store";
 
 const ChatPage = ({ socket }: { socket: Socket }) => {
-  const [messages, setMessages] = useState<message[]>([]);
+  // const [messages, setMessages] = useState<message[]>([]);
   const [typingStatus, setTypingStatus] = useState("");
   const lastMessageRef = useRef<null | HTMLElement>(null);
-  const { loading } = useAppSelector((state) => state.User);
+  const { loading, user } = useAppSelector((state) => state.User);
+  const { messages } = useAppSelector((state) => state.Message);
 
-  useEffect(() => {
-    socket.on("messageResponse", (data) => setMessages([...messages, data]));
-  }, [socket, messages]);
+  socket.emit("newUser", { socketID: socket.id, user });
+
+  // useEffect(() => {
+  //   socket.on("messageResponse", (data) => setMessages([...messages, data]));
+  // }, [socket, messages]);
 
   useEffect(() => {
     lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -31,7 +34,8 @@ const ChatPage = ({ socket }: { socket: Socket }) => {
       <ChatBar socket={socket} />
       <div className="chat__main">
         <ChatBody
-          messages={messages}
+          // messages={messages}
+          socket={socket}
           lastMessageRef={lastMessageRef}
           typingStatus={typingStatus}
         />

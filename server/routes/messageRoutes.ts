@@ -1,9 +1,12 @@
 import express from "express";
 import { isAuthenticatedUser } from "../middleware/auth";
-import { sendMessage } from "../controller/messageController";
+import { sendMessage, getConversation } from "../controller/messageController";
+import { errorMiddleware } from "../middleware/error";
 
 const router = express.Router();
 
 router.route("/sendMessage").post(isAuthenticatedUser, sendMessage);
+router.route("/getConversation").post(isAuthenticatedUser, getConversation);
+router.use(errorMiddleware);
 
 export default router;

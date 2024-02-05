@@ -3,11 +3,19 @@ export interface message {
   name: string;
   text: string;
   to?: string;
-}
+} // socket chat
 
 export interface User extends Friend {
   socketID: string;
   userName: string;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  userIds?: string[];
+  adminId: string;
+  createAt: Date;
 }
 
 export interface UserInfo {
@@ -16,6 +24,7 @@ export interface UserInfo {
   userName: string;
   groupIds?: string[];
   groupAdmin?: string[];
+  groups?: Group[];
   isOnline: boolean;
   lastSeen: Date | null;
   createAt: Date | null;
@@ -58,4 +67,77 @@ export interface Friends {
   error: string;
 }
 
+export interface SendMessage {
+  groupId?: string;
+  recipitantId?: string;
+  text: string;
+}
 
+export interface User {
+  id: string;
+  email: string;
+  userName: string;
+}
+
+export interface GroupMessage {
+  users: User[];
+  messages: {
+    id: string;
+    text: string;
+    sendToId: string | null;
+    sendById: string;
+    sendToGroupId: string | null;
+    createAt: Date;
+  }[];
+  message: string;
+  success: boolean;
+}
+
+export interface MessageRequest {
+  recipientId?: string;
+  groupId?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface Message {
+  id: string;
+  text: string;
+  createAt: Date;
+  sendToId?: string | null;
+  sendById: string;
+  sendToGroupId?: string;
+  sendBy: {
+    id: string;
+    email: string;
+    userName: string;
+  };
+  sendTo?: {
+    id: string;
+    email: string;
+    userName: string;
+  };
+}
+
+export interface Messeges {
+  messages: Message[];
+  message: string;
+  success: boolean;
+  page: number;
+  pageSize: number;
+  loading: boolean;
+  error: string;
+}
+
+export interface GroupList {
+  id: string
+  name: string
+  userIds: string[]
+  adminId: string
+  createAt?: string
+  users: User[]
+  loading: boolean,
+  message: string,
+  error?: string,
+  success: boolean,
+}

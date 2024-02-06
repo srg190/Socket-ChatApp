@@ -8,11 +8,12 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN yan install
+RUN npm install
 
 # Copy the rest of the application files
 COPY . .
 
+RUN npm i -g typescript
 # Build the TypeScript application
 RUN npm run build
 
@@ -27,11 +28,8 @@ RUN npm run build
 # COPY --from=builder /app/node_modules ./node_modules
 # COPY --from=builder /app/package.json ./
 
-ENV DATABASE_URL=mongodb://root:root@localhost:27017/chatApp?authSource=admin
-ENV JWT_SECRET=sdkjkug979g439g479^#
-ENV COOKIE_EXPIRE=15
 # Expose the port that the app will run on
-EXPOSE 4000
+# EXPOSE 4000
 
 # Start the application using nodemon
 CMD ["node", "dist/app"]

@@ -50,23 +50,23 @@ const ChatBody = ({
         setChatWith(data.userName);
       } else {
         // 'data' is a Group
+
+        socket.emit("join-group", {
+          group: data.id,
+        });
+        
         dispatch(
           getGroupConversation({
             groupId: data.id,
           })
         );
+
         setChatWith(data.name);
       }
     });
     return () => {
       Emitter.off("chatWith");
     };
-  }, []);
-
-  useEffect(() => {
-    socket.on("private-message", (data) =>
-      console.log(data, " data from chat")
-    );
   }, [socket]);
 
   if (loading) {

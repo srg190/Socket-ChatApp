@@ -336,6 +336,7 @@ export const getGroupDetails = async (
         },
       },
     });
+    
     const detail = { ...group, messages: group && group.messages.reverse() };
     if (!group) {
       return next(new ErrorHandler("Group not found", StatusCodes.NOT_FOUND));

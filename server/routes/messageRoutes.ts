@@ -7,6 +7,5 @@ const router = express.Router();
 
 router.route("/sendMessage").post(isAuthenticatedUser, sendMessage);
 router.route("/getConversation").post(isAuthenticatedUser, getConversation);
-router.use(errorMiddleware);
 
 export default router;

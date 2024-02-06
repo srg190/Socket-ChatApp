@@ -63,6 +63,10 @@ const ChatFooter = ({ socket }: { socket: Socket }) => {
             text: message,
           })
         );
+        socket.emit("group-message", {
+          message: msg,
+          group: data && data.id,
+        });
       }
     }
     setMessage("");
@@ -75,14 +79,19 @@ const ChatFooter = ({ socket }: { socket: Socket }) => {
 
   useEffect(() => {
     const handlePrivateMessage = ({ message }: any) => {
-      console.log(message, "private-data");
-      dispatch(addMessage({ ...message }));
+      if (message) dispatch(addMessage({ ...message }));
+    };
+
+    const handleGroupMessage = ({ message }: any) => {
+      if (message) dispatch(addMessage({ ...message }));
     };
 
     socket.on("private-message", handlePrivateMessage);
+    socket.on("group-message", handleGroupMessage);
 
     return () => {
       socket.off("private-message", handlePrivateMessage);
+      socket.off("group-message", handleGroupMessage);
     };
   }, [socket, dispatch]);
 

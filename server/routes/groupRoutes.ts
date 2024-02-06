@@ -19,6 +19,4 @@ router.route("/leaveGroup").post(isAuthenticatedUser, leaveGroup);
 router.route("/getGroupDetails").post(isAuthenticatedUser, getGroupDetails);
 router.route("/getGroupUsersList").post(isAuthenticatedUser, getGroupUsersList);
 
-router.use(errorMiddleware);
-
 export default router;

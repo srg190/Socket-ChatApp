@@ -7,7 +7,6 @@ import express, {
 import { Socket, Server } from "socket.io";
 import cors from "cors";
 import http from "http";
-import { SocketUser } from "./interface";
 import userRoutes from "./routes/userRoutes";
 import groupRoutes from "./routes/groupRoutes";
 import messageRoutes from "./routes/messageRoutes";
@@ -31,11 +30,7 @@ app.use(
 );
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(
-  (err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
-    errorMiddleware(err, req, res, next);
-  }
-);
+
 // Route.
 
 const server = http.createServer(app);
@@ -64,16 +59,14 @@ interface User {
   [key: string]: string;
 }
 
-const messages: Message[] = [];
-
 let userToSocketMap: User = {};
 
 io.on("connection", (socket: Socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
 
-  socket.on("message", (data) => {
-    io.emit("messageResponse", data);
-  });
+  // socket.on("message", (data) => {
+  //   io.emit("messageResponse", data);
+  // });
 
   socket.on("newUser", (data) => {
     userToSocketMap[data.user.id] = data.socketID;
@@ -83,16 +76,8 @@ io.on("connection", (socket: Socket) => {
 
   socket.on(
     "private-message",
-    ({
-      recipitantId,
-      message,
-    }: {
-      recipitantId: string;
-      text: string;
-      message: Message;
-    }) => {
+    ({ recipitantId, message }: { recipitantId: string; message: Message }) => {
       const recipitantSocket = userToSocketMap[recipitantId];
-      messages.push(message);
       if (recipitantSocket) {
         io.to(recipitantSocket).emit("private-message", {
           sender: socket.id,
@@ -100,34 +85,30 @@ io.on("connection", (socket: Socket) => {
         });
       } else {
         io.emit("error", "recipient not found");
-        console.log(`Recipient ${recipitantId} is not connected.`);
+        console.log(`Recipient ${recipitantId} is not.`);
       }
     }
   );
 
-  // socket.emit('private-message-limit', )
+  socket.on("join-group", ({ group }: { group: string }) => {
+    const userId = Object.keys(userToSocketMap).find(
+      (key) => userToSocketMap[key] === socket.id
+    );
+    socket.join(group);
+    console.log(`User ${userId} joined the group`, group);
+    io.to(group).emit("group-message", `User ${userId} joined the group`);
+  });
 
-  socket.on("typing", (data) => socket.broadcast.emit("typingResponse", data));
+  socket.on(
+    "group-message",
+    ({ group, message }: { group: string; message: Message }) => {
+      console.log(group, message);
+      io.to(group).emit("group-message", { sender: socket.id, message });
+    }
+  );
 
-  // socket.on("disconnect", () => {
-  //   console.log("🔥: A user disconnected");
-  //   users = users.filter((user) => user.socketID !== socket.id);
-  //   io.emit("newUserResponse", users);
-  //   socket.disconnect();
-  // });
+  // socket.on("typing", (data) => socket.broadcast.emit("typingResponse", data));
 
-  // socket.on(
-  //   "private_message",
-  //   ({ content, to }: { content: string; to: string }) => {
-  //     const message = {
-  //       content,
-  //       from: socket.id,
-  //       to,
-  //     };
-  //     socket.to(to).to(socket.id).emit("private_message", message);
-  //     // messageStore.saveMessage(message);
-  //   }
-  // );
 });
 
 app.get("/", (req: Request, res: Response) => {
@@ -136,15 +117,20 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
-app.get('/endpoint', (req: Request, res: Response) => {
-  const userAgent = req.headers['user-agent'];
-  console.log('User-Agent:', userAgent);
+app.get("/endpoint", (req: Request, res: Response) => {
+  const userAgent = req.headers["user-agent"];
+  console.log("User-Agent:", userAgent);
   // Further processing based on the userAgent
 });
 
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", groupRoutes);
 app.use("/api/v1", messageRoutes);
+app.use(
+  (err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
+    errorMiddleware(err, req, res, next);
+  }
+);
 
 server.listen(PORT, () => {
   console.log("port is running on the " + PORT);

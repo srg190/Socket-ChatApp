@@ -15,5 +15,5 @@ router.route("/register").post(registerUser);
 router.route("/login").post(loginUser);
 router.route("/allUsers").get(isAuthenticatedUser, getAllUser);
 router.route("/logout").post(isAuthenticatedUser, logout);
-router.use(errorMiddleware);
+
 export default router;

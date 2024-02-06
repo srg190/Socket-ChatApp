@@ -12,6 +12,7 @@ const initialState: Messeges = {
   success: false,
   page: 1,
   pageSize: 30,
+  countMessage: 0,
 };
 
 export const userSendMessage = createAsyncThunk(
@@ -83,10 +84,15 @@ export const getGroupConversation = createAsyncThunk(
   }
 );
 
-const userSlice = createSlice({
+const messageSlice = createSlice({
   name: "message",
   initialState,
-  reducers: {},
+  reducers: {
+    addMessage: (state, action) => {
+      state.countMessage += 1;
+      state.messages = [...state.messages, action.payload];
+    },
+  },
   extraReducers: (builder) => {
     builder.addCase(userSendMessage.pending, (state) => {
       state.loading = true;
@@ -171,5 +177,5 @@ const userSlice = createSlice({
   },
 });
 
-export const userActions = userSlice.actions;
-export default userSlice.reducer;
+export const messageAction = messageSlice.actions;
+export default messageSlice.reducer;

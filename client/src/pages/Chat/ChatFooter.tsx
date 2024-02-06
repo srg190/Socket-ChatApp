@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 import Emitter from "../../event";
-import { Friend, Group } from "../../interface";
-import { userSendMessage } from "../../redux/slices/messageSlice";
-import { useAppDispatch } from "../../redux/store";
+import { Friend, Group, Message } from "../../interface";
+import {
+  userSendMessage,
+  messageAction,
+} from "../../redux/slices/messageSlice";
+import { useAppDispatch, useAppSelector } from "../../redux/store";
 
 const ChatFooter = ({ socket }: { socket: Socket }) => {
   const [message, setMessage] = useState("");
   const [componentReady, setComponentReady] = useState(false);
-  // const [currChatWith, setCurrChatWith] = useState<"friend" | "group">(
-  //   "friend"
-  // );
   const [data, setData] = useState<Friend | Group | null>(null);
+
+  const { addMessage } = messageAction;
+  const { user } = useAppSelector((state) => state.User);
   const dispatch = useAppDispatch();
 
   const handleTyping = () =>
@@ -26,24 +29,30 @@ const ChatFooter = ({ socket }: { socket: Socket }) => {
     }, 1000);
   };
 
-  Emitter.on("chatWith", (data: Friend | Group) => {
-    // console.log("Hello World chatwith ---> ", data);
-    setData(data);
-    setComponentReady(true);
-  });
-
-  const sendMessage = () => {
+  const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (componentReady && data) {
+      const msg = {
+        id: new Date().toLocaleString(),
+        sendById: user.id,
+        text: message,
+        createAt: new Date(),
+        sendBy: {
+          id: user.id,
+          email: user.email,
+          userName: user.userName,
+        },
+      };
       if ((data as Friend).email) {
-        // setCurrChatWith("friend");
         dispatch(
           userSendMessage({
             recipitantId: data && data.id,
             text: message,
           })
         );
+        dispatch(addMessage({ ...msg }));
         socket.emit("private-message", {
-          text: message,
+          message: msg,
           recipitantId: data && data.id,
         });
       } else {
@@ -56,15 +65,26 @@ const ChatFooter = ({ socket }: { socket: Socket }) => {
         );
       }
     }
+    setMessage("");
   };
 
-  const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    sendMessage();
-    setMessage("");
-    // if (message.trim() && localStorage.getItem("userName")) {
-    // }
-  };
+  Emitter.on("chatWith", (data: Friend | Group) => {
+    setData(data);
+    setComponentReady(true);
+  });
+
+  useEffect(() => {
+    const handlePrivateMessage = ({ message }: any) => {
+      console.log(message, "private-data");
+      dispatch(addMessage({ ...message }));
+    };
+
+    socket.on("private-message", handlePrivateMessage);
+
+    return () => {
+      socket.off("private-message", handlePrivateMessage);
+    };
+  }, [socket, dispatch]);
 
   return (
     <div className="chat__footer">

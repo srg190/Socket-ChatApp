@@ -139,7 +139,7 @@ export const getConversation = async (
     res.status(StatusCodes.ACCEPTED).json({
       message: "Messages fetched Successfull",
       success: true,
-      data: messages,
+      data: messages.reverse(),
       page: page,
       pageSize: pageSize,
     });

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Group, Message, User, message } from "../../interface";
 import Emitter from "../../event";
-import { setCookie, timeOptions } from "../../utilities";
+import { setCookie, timeOptions, timeToReadable } from "../../utilities";
 import { useAppDispatch, useAppSelector } from "../../redux/store";
 import { userLogout } from "../../redux/slices/userSlice";
 import {
@@ -83,38 +83,25 @@ const ChatBody = ({
       </header>
 
       <div className="message__container">
-        {messages
-          .slice()
-          .reverse()
-          .map((message) =>
-            message.sendBy.id === user.id ? (
-              <div className="message__chats" key={message.id}>
-                <p className="sender__name">You</p>
-                <div className="message__sender">
-                  <p>{message.text}</p>
-                  <h6>
-                    {new Date(message.createAt.toLocaleString()).toLocaleString(
-                      "en-IN",
-                      timeOptions
-                    )}
-                  </h6>
-                </div>
+        {messages.map((message) =>
+          message.sendBy.id === user.id ? (
+            <div className="message__chats" key={message.id}>
+              <p className="sender__name">You</p>
+              <div className="message__sender">
+                <p>{message.text}</p>
+                <h6>{timeToReadable(message.createAt)}</h6>
               </div>
-            ) : (
-              <div className="message__chats" key={message.id}>
-                <p>{message.sendBy.userName}</p>
-                <div className="message__recipient">
-                  <p>{message.text}</p>
-                  <h6>
-                    {new Date(message.createAt.toLocaleString()).toLocaleString(
-                      "en-IN",
-                      timeOptions
-                    )}
-                  </h6>
-                </div>
+            </div>
+          ) : (
+            <div className="message__chats" key={message.id}>
+              <p>{message.sendBy.userName}</p>
+              <div className="message__recipient">
+                <p>{message.text}</p>
+                <h6>{timeToReadable(message.createAt)}</h6>
               </div>
-            )
-          )}
+            </div>
+          )
+        )}
 
         <div className="message__status">
           <p>{typingStatus}</p>

@@ -68,7 +68,6 @@ const ChatBar = ({ socket }: { socket: Socket }) => {
     }
   }, [selectFriend, selectGroup, groupUsers]);
 
-
   return (
     <div className="chat__sidebar">
       <h2>Open Chat</h2>
@@ -77,10 +76,8 @@ const ChatBar = ({ socket }: { socket: Socket }) => {
         <div className="chat__users chat_active">
           {Friends.map((friend) =>
             friend.id === user.id ? null : (
-              <div className="user-box">
-                <p onClick={() => handleFriends(friend)} key={friend.id}>
-                  {friend.userName}
-                </p>
+              <div className="user-box" key={friend.id}>
+                <p onClick={() => handleFriends(friend)}>{friend.userName}</p>
                 {friend.isOnline ? <div className="green__"></div> : null}
               </div>
             )

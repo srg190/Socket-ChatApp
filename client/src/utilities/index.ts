@@ -19,3 +19,8 @@ export const timeOptions: Intl.DateTimeFormatOptions = {
   second: "numeric",
   timeZone: "Asia/Kolkata", // Set the time zone to India
 };
+
+export const timeToReadable = (date: Date): string => {
+  return new Date(date.toLocaleString()).toLocaleString("en-IN", timeOptions);
+};
+

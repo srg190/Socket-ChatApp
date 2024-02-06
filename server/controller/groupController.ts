@@ -94,7 +94,7 @@ export const addInGroup = async (
     });
 
     const isAlreadyInGroup = group?.userIds.some((v) => v == recipitantId);
-    if (isAlreadyInGroup){
+    if (isAlreadyInGroup) {
       return next(
         new ErrorHandler(
           "User already exist in this group",
@@ -336,14 +336,14 @@ export const getGroupDetails = async (
         },
       },
     });
-
+    const detail = { ...group, messages: group && group.messages.reverse() };
     if (!group) {
       return next(new ErrorHandler("Group not found", StatusCodes.NOT_FOUND));
     }
     res.status(StatusCodes.OK).json({
       message: "Fetch successfully",
       success: true,
-      data: group,
+      data: detail,
       page: page || 1,
       pageSize: pageSize || 30,
     });

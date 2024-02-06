@@ -125,19 +125,20 @@ export interface Messeges {
   success: boolean;
   page: number;
   pageSize: number;
+  countMessage: number;
   loading: boolean;
   error: string;
 }
 
 export interface GroupList {
-  id: string
-  name: string
-  userIds: string[]
-  adminId: string
-  createAt?: string
-  users: User[]
-  loading: boolean,
-  message: string,
-  error?: string,
-  success: boolean,
+  id: string;
+  name: string;
+  userIds: string[];
+  adminId: string;
+  createAt?: string;
+  users: User[];
+  loading: boolean;
+  message: string;
+  error?: string;
+  success: boolean;
 }

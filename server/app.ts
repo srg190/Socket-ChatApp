@@ -48,21 +48,12 @@ const io = new Server(server, {
 });
 
 ////////////////////////////////////////////////////////////////
-// users.push({ userName: "Broadcast" });
 
 interface Message {
   id: string;
   text: string;
   createAt: Date;
-  sendToId?: string | null;
-  sendById: string;
-  sendToGroupId?: string;
   sendBy: {
-    id: string;
-    email: string;
-    userName: string;
-  };
-  sendTo?: {
     id: string;
     email: string;
     userName: string;
@@ -94,7 +85,6 @@ io.on("connection", (socket: Socket) => {
     "private-message",
     ({
       recipitantId,
-      text,
       message,
     }: {
       recipitantId: string;
@@ -106,8 +96,7 @@ io.on("connection", (socket: Socket) => {
       if (recipitantSocket) {
         io.to(recipitantSocket).emit("private-message", {
           sender: socket.id,
-          text,
-          messages,
+          message,
         });
       } else {
         io.emit("error", "recipient not found");
@@ -145,6 +134,12 @@ app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
     message: "Got The Data",
   });
+});
+
+app.get('/endpoint', (req: Request, res: Response) => {
+  const userAgent = req.headers['user-agent'];
+  console.log('User-Agent:', userAgent);
+  // Further processing based on the userAgent
 });
 
 app.use("/api/v1", userRoutes);

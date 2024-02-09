@@ -22,7 +22,6 @@ const Home = ({ socket }: { socket: Socket }) => {
     } else {
       dispatch(userLogin({ email, userName, password }));
     }
-    
   };
 
   useEffect(() => {
@@ -34,10 +33,10 @@ const Home = ({ socket }: { socket: Socket }) => {
   if (loading) {
     return <h1>Loading...</h1>;
   }
-  
+
   return (
     <>
-      <div>
+      <div> 
         <form className="home__container" onSubmit={handleSubmit}>
           <h2 className="home__header">
             {mode === "register" ? "Register" : "Sign In"} to Open Chat
@@ -88,3 +87,5 @@ const Home = ({ socket }: { socket: Socket }) => {
 };
 
 export default Home;
+
+

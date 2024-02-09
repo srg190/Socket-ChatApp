@@ -12,12 +12,10 @@ import {
 import { Socket } from "socket.io-client";
 
 const ChatBody = ({
-  // messages,
   socket,
   lastMessageRef,
   typingStatus,
 }: {
-  // messages?: message[];
   socket: Socket;
   lastMessageRef: any;
   typingStatus: string;
@@ -28,8 +26,9 @@ const ChatBody = ({
   const { loading, error, success, user } = useAppSelector(
     (state) => state.User
   );
+  const { currentRoom } = useAppSelector((state) => state.Common);
   const { messages } = useAppSelector((state) => state.Message);
-  // const { data, setData } = useState<Message[]>([]);
+
   const handleLeaveChat = () => {
     localStorage.removeItem("userName");
     dispatch(userLogout());
@@ -40,34 +39,28 @@ const ChatBody = ({
   };
 
   useEffect(() => {
-    Emitter.on("chatWith", (data: User | Group) => {
-      if ("userName" in data) {
+    if (currentRoom) {
+      if ("userName" in currentRoom) {
         dispatch(
           getUserConversation({
-            recipientId: data.id,
+            recipientId: currentRoom.id,
           })
         );
-        setChatWith(data.userName);
+        setChatWith(currentRoom.userName);
       } else {
-        // 'data' is a Group
-
         socket.emit("join-group", {
-          group: data.id,
+          group: currentRoom.id,
         });
-        
+
         dispatch(
           getGroupConversation({
-            groupId: data.id,
+            groupId: currentRoom.id,
           })
         );
-
-        setChatWith(data.name);
+        setChatWith(currentRoom.name);
       }
-    });
-    return () => {
-      Emitter.off("chatWith");
-    };
-  }, [socket]);
+    }
+  }, [currentRoom]);
 
   if (loading) {
     return <h1>Loading...</h1>;

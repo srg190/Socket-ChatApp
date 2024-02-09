@@ -11,18 +11,37 @@ services:
       MONGO_REPLICA_PORT: 27017
     ports:
       - "27017:27017"
-  backend:
-    build:
-      context: ./server
-    #restart: always
-    environment:
-      - DATABASE_URL=mongodb://root:root@localhost:27017/chatApp?authSource=admin
-      - JWT_SECRET=sdkjkug979g439g479^#
-      - COOKIE_EXPIRE=15
-    depends_on:
-      - mongo
-    ports:
-      - "4000:4000"
     volumes:
-      - ./server:/app
-    container_name: backend
+      - ./database:/app
+
+  # backend:
+  #   build:
+  #     context: ./server
+  #   environment:
+  #     - DATABASE_URL=mongodb://root:root@mongo:27017/chatApp
+  #     - JWT_SECRET=sdkjkug979g439g479^#
+  #     - COOKIE_EXPIRE=15
+  #     - PORT=4000
+  #   depends_on:
+  #     - mongo
+  #   ports:
+  #     - "4000:4000"
+  #   volumes:
+  #     - ./server:/app
+  #   container_name: backend
+
+  zookeeper:
+    image: zookeeper:latest
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://192.168.29.216:9092"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper

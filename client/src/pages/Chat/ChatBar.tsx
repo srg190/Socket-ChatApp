@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/store";
 import { userFriends } from "../../redux/slices/allUsersSlice";
 import { addInGroup, createGroup } from "../../redux/slices/userSlice";
 import { getGroupUsersList } from "../../redux/slices/groupSlice";
+import { userCommonActions } from "../../redux/slices/commonSlice";
 
 const ChatBar = ({ socket }: { socket: Socket }) => {
   const [groupName, setGroupName] = useState("");
@@ -16,6 +17,7 @@ const ChatBar = ({ socket }: { socket: Socket }) => {
   const { users: Friends } = useAppSelector((state) => state.Friend);
   const { user } = useAppSelector((state) => state.User);
   const { users: groupUsers } = useAppSelector((state) => state.Group);
+  const { setCurrentUser } = userCommonActions;
 
   const dispatch = useAppDispatch();
 
@@ -35,13 +37,13 @@ const ChatBar = ({ socket }: { socket: Socket }) => {
     setFilterFriends(filteredFriends);
   };
 
-  const handleFriends = (friend: Friend) => {
-    eventEmitter.emit("chatWith", friend);
-  };
+  // const handleFriends = (friend: Friend) => {
+  //   eventEmitter.emit("chatWith", friend);
+  // };
 
-  const handleGroups = (groups: Group) => {
-    eventEmitter.emit("chatWith", groups);
-  };
+  // const handleGroups = (groups: Group) => {
+  //   eventEmitter.emit("chatWith", groups);
+  // };
 
   const handleSelectGroup = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectGroup(e.target.value);
@@ -77,7 +79,9 @@ const ChatBar = ({ socket }: { socket: Socket }) => {
           {Friends.map((friend) =>
             friend.id === user.id ? null : (
               <div className="user-box" key={friend.id}>
-                <p onClick={() => handleFriends(friend)}>{friend.userName}</p>
+                <p onClick={() => dispatch(setCurrentUser(friend))}>
+                  {friend.userName}
+                </p>
                 {friend.isOnline ? <div className="green__"></div> : null}
               </div>
             )
@@ -90,7 +94,9 @@ const ChatBar = ({ socket }: { socket: Socket }) => {
           {Groups &&
             Groups.map((group) => (
               <div className="user-box" key={group.name}>
-                <p onClick={() => handleGroups(group)}>{group.name}</p>
+                <p onClick={() => dispatch(setCurrentUser(group))}>
+                  {group.name}
+                </p>
                 <h6>{group.adminId === user.id ? "Owner" : ""}</h6>
               </div>
             ))}

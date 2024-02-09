@@ -10,11 +10,9 @@ import { useAppDispatch, useAppSelector } from "../../redux/store";
 
 const ChatFooter = ({ socket }: { socket: Socket }) => {
   const [message, setMessage] = useState("");
-  const [componentReady, setComponentReady] = useState(false);
-  const [data, setData] = useState<Friend | Group | null>(null);
-
   const { addMessage } = messageAction;
   const { user } = useAppSelector((state) => state.User);
+  const { currentRoom } = useAppSelector((state) => state.Common);
   const dispatch = useAppDispatch();
 
   const handleTyping = () =>
@@ -31,51 +29,45 @@ const ChatFooter = ({ socket }: { socket: Socket }) => {
 
   const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (componentReady && data) {
-      const msg = {
-        id: new Date().toLocaleString(),
-        sendById: user.id,
-        text: message,
-        createAt: new Date(),
-        sendBy: {
-          id: user.id,
-          email: user.email,
-          userName: user.userName,
-        },
-      };
-      if ((data as Friend).email) {
+    const msg = {
+      id: new Date().toLocaleString(),
+      sendById: user.id,
+      text: message,
+      createAt: new Date(),
+      sendBy: {
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
+      },
+    };
+    if (currentRoom) {
+      if ((currentRoom as Friend).email) {
         dispatch(
           userSendMessage({
-            recipitantId: data && data.id,
+            recipitantId: currentRoom.id,
             text: message,
           })
         );
         dispatch(addMessage({ ...msg }));
         socket.emit("private-message", {
           message: msg,
-          recipitantId: data && data.id,
+          recipitantId: currentRoom.id,
         });
       } else {
-        // setCurrChatWith("group");
         dispatch(
           userSendMessage({
-            groupId: data && data.id,
+            groupId: currentRoom.id,
             text: message,
           })
         );
         socket.emit("group-message", {
           message: msg,
-          group: data && data.id,
+          group: currentRoom.id,
         });
       }
     }
     setMessage("");
   };
-
-  Emitter.on("chatWith", (data: Friend | Group) => {
-    setData(data);
-    setComponentReady(true);
-  });
 
   useEffect(() => {
     const handlePrivateMessage = ({ message }: any) => {

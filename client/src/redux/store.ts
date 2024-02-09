@@ -4,6 +4,7 @@ import userReducer from "./slices/userSlice";
 import userFriendSlice from "./slices/allUsersSlice";
 import userMessage from "./slices/messageSlice";
 import userGroup from "./slices/groupSlice";
+import userCommon from "./slices/commonSlice";
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
     Friend: userFriendSlice,
     Message: userMessage,
     Group: userGroup,
+    Common: userCommon,
   },
 });
 export type RootState = ReturnType<typeof store.getState>;

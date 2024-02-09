@@ -5,17 +5,17 @@ FROM node:21 AS builder
 WORKDIR /app
 
 # Copy package.json and package-lock.json to the container
-COPY package*.json ./
+# COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+# RUN npm install
 
 # Copy the rest of the application files
-COPY . .
+COPY ./dist .
 
-RUN npm i -g typescript
+# RUN npm i -g typescript
 # Build the TypeScript application
-RUN npm run build
+# RUN npm run build
 
 # Use a lightweight production image
 # FROM node:21 AS production

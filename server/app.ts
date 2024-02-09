@@ -16,7 +16,7 @@ import { errorMiddleware } from "./middleware/error";
 import ErrorHandler from "./middleware/error";
 
 const app = express();
-const PORT: Number = 4000;
+const PORT: Number = process.env.PORT ? parseInt(process.env.PORT) : 8000;
 const Root: "/" = "/";
 let con: number = 0;
 let connections: any = [];
@@ -108,7 +108,6 @@ io.on("connection", (socket: Socket) => {
   );
 
   // socket.on("typing", (data) => socket.broadcast.emit("typingResponse", data));
-
 });
 
 app.get("/", (req: Request, res: Response) => {

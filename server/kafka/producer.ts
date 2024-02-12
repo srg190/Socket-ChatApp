@@ -1,25 +1,26 @@
-import {
-  Kafka,
-  Message,
-  Producer,
-  ProducerBatch,
-  TopicMessages,
-} from "kafkajs";
+import { Message, Producer, ProducerBatch, TopicMessages } from "kafkajs";
+import { SendMessage } from "../interface";
+
+import KafkaClient from "./client";
 
 interface CustomMessageFormat {
-  a: string;
+  wish: string;
 }
 
-export default class ProducerFactory {
+export default class ProducerFactory extends KafkaClient {
   private producer: Producer;
+  // private flag: Boolean = false;
 
   constructor() {
+    super();
     this.producer = this.createProducer();
   }
 
   public async start(): Promise<void> {
     try {
+      console.log("Producer is connecting...");
       await this.producer.connect();
+      console.log("Producer is connected");
     } catch (error) {
       console.log("Error connecting the producer: ", error);
     }
@@ -27,6 +28,22 @@ export default class ProducerFactory {
 
   public async shutdown(): Promise<void> {
     await this.producer.disconnect();
+  }
+
+  public async sendMessage(message: SendMessage): Promise<void> {
+    const kafkaMessage: Message = {
+      value: JSON.stringify(message),
+      // partition: this.flag ? 0 : 1,
+    };
+    // this.flag = !this.flag;
+    try {
+      await this.producer.send({
+        topic: "chat-messages",
+        messages: [kafkaMessage],
+      });
+    } catch (error) {
+      console.log("Error sending message: ", error);
+    }
   }
 
   public async sendBatch(messages: Array<CustomMessageFormat>): Promise<void> {
@@ -37,7 +54,7 @@ export default class ProducerFactory {
     });
 
     const topicMessages: TopicMessages = {
-      topic: "producer-topic",
+      topic: "chat-messages",
       messages: kafkaMessages,
     };
 
@@ -49,11 +66,6 @@ export default class ProducerFactory {
   }
 
   private createProducer(): Producer {
-    const kafka = new Kafka({
-      clientId: "producer-client",
-      brokers: ["localhost:9092"],
-    });
-
-    return kafka.producer();
+    return this.Kafka.producer();
   }
 }

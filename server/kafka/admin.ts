@@ -1,18 +1,58 @@
-import { Kafka, Producer } from "kafkajs";
+import { Admin, ITopicMetadata, Kafka, Producer } from "kafkajs";
+import KafkaClient from "./client";
 
-export default class Admin {
-  private producer: Producer;
+export default class kafkaAdmin extends KafkaClient {
+  private admin: Admin;
 
   constructor() {
-    this.producer = this.createProducer();
+    super();
+    this.admin = this.createAdmin();
   }
 
-  private createProducer(): Producer {
-    const kafka = new Kafka({
-      clientId: "producer-client",
-      brokers: ["localhost:9092"],
-    });
+  public async getTopicsMetadata(): Promise<any> {
+    try {
+      const data = await this.admin.fetchTopicMetadata();
+      console.log(data.topics, "Topics");
+      return data.topics;
+    } catch (error) {
+      console.log("Error in getting topics", error);
+    }
+  }
 
-    return kafka.producer();
+  public async getTopicOffset() {
+    try {
+      return await this.admin.fetchTopicOffsets("chat-messages");
+    } catch (error) {
+      console.log("Error in getting topics offset", error);
+    }
+  }
+
+  public async deleteTopicRecord({ offset = "-1" }: { offset: string }) {
+    try {
+      await this.admin.deleteTopicRecords({
+        topic: "chat-messages",
+        partitions: [
+          {
+            partition: 0,
+            offset: offset,
+          },
+        ],
+      });
+    } catch (error) {
+      console.log("Error in deleting Topic Records", error);
+    }
+  }
+
+  public async deleteGroup({ groupId }: { groupId: string }) {
+    try {
+      await this.admin.deleteGroups([groupId]);
+      console.log("group deleted successfully", groupId);
+    } catch (error) {
+      console.log("Error in deleting the group ", groupId);
+    }
+  }
+  
+  public createAdmin(): Admin {
+    return this.Kafka.admin();
   }
 }

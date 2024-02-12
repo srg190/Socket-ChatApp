@@ -37,7 +37,8 @@
     "jsonwebtoken": "^9.0.2",
     "kafkajs": "^2.2.4",
     "morgan": "^1.10.0",
-    "socket.io": "^4.7.4"
+    "socket.io": "^4.7.4",
+    "typescript": "^5.3.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

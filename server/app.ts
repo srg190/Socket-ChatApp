@@ -14,6 +14,8 @@ import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import { errorMiddleware } from "./middleware/error";
 import ErrorHandler from "./middleware/error";
+import { sendToKafka } from "./kafka/kafkaController";
+import { Message } from "./interface";
 
 const app = express();
 const PORT: Number = process.env.PORT ? parseInt(process.env.PORT) : 8000;
@@ -44,17 +46,6 @@ const io = new Server(server, {
 
 ////////////////////////////////////////////////////////////////
 
-interface Message {
-  id: string;
-  text: string;
-  createAt: Date;
-  sendBy: {
-    id: string;
-    email: string;
-    userName: string;
-  };
-}
-
 interface User {
   [key: string]: string;
 }
@@ -71,7 +62,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("newUser", (data) => {
     userToSocketMap[data.user.id] = data.socketID;
     io.emit("newUserResponse", userToSocketMap);
-    console.log(" here the users", userToSocketMap);
+    // console.log(" here the users", userToSocketMap);
   });
 
   socket.on(
@@ -83,9 +74,14 @@ io.on("connection", (socket: Socket) => {
           sender: socket.id,
           message,
         });
+        sendToKafka({
+          recipitantId,
+          text: message.text,
+          sendById: message.sendBy.id,
+        });
       } else {
         io.emit("error", "recipient not found");
-        console.log(`Recipient ${recipitantId} is not.`);
+        // console.log(`Recipient ${recipitantId} is not.`);
       }
     }
   );
@@ -102,7 +98,7 @@ io.on("connection", (socket: Socket) => {
   socket.on(
     "group-message",
     ({ group, message }: { group: string; message: Message }) => {
-      console.log(group, message);
+      // console.log(group, message);
       io.to(group).emit("group-message", { sender: socket.id, message });
     }
   );
@@ -130,6 +126,8 @@ app.use(
     errorMiddleware(err, req, res, next);
   }
 );
+
+// kafkaController();
 
 server.listen(PORT, () => {
   console.log("port is running on the " + PORT);

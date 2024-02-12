@@ -22,3 +22,21 @@ export interface Token {
 export interface CustomRequest extends Request {
   user?: User;
 }
+
+export interface Message {
+  id: string;
+  text: string;
+  createAt: Date;
+  sendBy: {
+    id: string;
+    email: string;
+    userName: string;
+  };
+}
+
+export interface SendMessage {
+  groupId?: string;
+  text: string;
+  recipitantId?: string;
+  sendById: string;
+}

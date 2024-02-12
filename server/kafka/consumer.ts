@@ -2,27 +2,30 @@ import {
   Consumer,
   ConsumerSubscribeTopics,
   EachBatchPayload,
-  Kafka,
   EachMessagePayload,
 } from "kafkajs";
+import KafkaClient from "./client";
 
 interface ExampleMessageProcessor {
   processMessage(payload: EachMessagePayload): Promise<void>;
 }
 
-export default class ExampleConsumer {
+export default class ConsumerFactory extends KafkaClient {
   private kafkaConsumer: Consumer;
-  private messageProcessor: ExampleMessageProcessor;
+  private consumerGroup: string;
+  // private messageProcessor: ExampleMessageProcessor;
 
-  public constructor(messageProcessor: ExampleMessageProcessor) {
-    this.messageProcessor = messageProcessor;
+  public constructor(consumerGroup: string) {
+    super();
+    // this.messageProcessor = messageProcessor;
     this.kafkaConsumer = this.createKafkaConsumer();
+    this.consumerGroup = consumerGroup;
   }
 
   public async startConsumer(): Promise<void> {
     const topic: ConsumerSubscribeTopics = {
-      topics: ["example-topic"],
-      fromBeginning: false,
+      topics: [this.consumerGroup],
+      fromBeginning: true,
     };
 
     try {
@@ -36,6 +39,7 @@ export default class ExampleConsumer {
           console.log(`- ${prefix} ${message.key}#${message.value}`);
         },
       });
+      console.log(this.kafkaConsumer.logger(), " logs data");
     } catch (error) {
       console.log("Error: ", error);
     }
@@ -43,8 +47,8 @@ export default class ExampleConsumer {
 
   public async startBatchConsumer(): Promise<void> {
     const topic: ConsumerSubscribeTopics = {
-      topics: ["example-topic"],
-      fromBeginning: false,
+      topics: [this.consumerGroup],
+      fromBeginning: true,
     };
 
     try {
@@ -55,7 +59,7 @@ export default class ExampleConsumer {
           const { batch } = eachBatchPayload;
           for (const message of batch.messages) {
             const prefix = `${batch.topic}[${batch.partition} | ${message.offset}] / ${message.timestamp}`;
-            console.log(`- ${prefix} ${message.key}#${message.value}`);
+            console.log(`- ${prefix} ${message.key || "key"}#${message.value}`);
           }
         },
       });
@@ -69,11 +73,7 @@ export default class ExampleConsumer {
   }
 
   private createKafkaConsumer(): Consumer {
-    const kafka = new Kafka({
-      clientId: "client-id",
-      brokers: ["example.kafka.broker:9092"],
-    });
-    const consumer = kafka.consumer({ groupId: "consumer-group" });
+    const consumer = this.Kafka.consumer({ groupId: "consumer-group" });
     return consumer;
   }
 }
